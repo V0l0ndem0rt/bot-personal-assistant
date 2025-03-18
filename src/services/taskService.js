@@ -97,14 +97,16 @@ export const taskService = {
 	},
 	async createUser(userId) {
 		try {
+			console.log('createUser', userId)
+			const user = await this.getUser(userId)
+			if (user != null) {
+				return user
+			}
+
 			const newUser = {
 				userId,
 				model: 'GigaChat-2',
 				context: '',
-			}
-			const user = await this.getUser(userId)
-			if (user) {
-				return user
 			}
 
 			const response = await fetch(`${API_URL}/users`, {
@@ -127,14 +129,13 @@ export const taskService = {
 	},
 	async getUser(userId) {
 		try {
-			const response = await fetch(`${API_URL}/users/${userId}`)
+			const response = await fetch(`${API_URL}/users?userId=${userId}`)
 			if (!response.ok) {
-				if (response.status === 404) {
-					return null // Пользователь не найден
-				}
-				throw new Error(`Ошибка: ${response.status}`)
+				console.log('Пользователь не найден')
+				return null
 			}
-			return await response.json()
+			const user = await response.json()
+			return await user
 		} catch (error) {
 			console.error('Ошибка при получении пользователя:', error)
 			return null
