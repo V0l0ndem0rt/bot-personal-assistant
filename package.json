@@ -1,0 +1,24 @@
+{
+	"author": "Vladimir Kiselev",
+	"name": "telegram-bot",
+	"version": "1.0.0",
+	"description": "Telegram bot",
+	"main": "src/bot/index.js",
+	"type": "module",
+	"dependencies": {
+		"dotenv": "^16.4.7",
+		"gigachat-node": "^2.4.5",
+		"node-schedule": "^2.1.1",
+		"telegraf": "^4.16.3"
+	},
+	"scripts": {
+		"start": "node src/bot/index.js",
+		"dev": "nodemon src/bot/index.js",
+		"db": "json-server --watch db.json --port 3000"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"json-server": "^1.0.0-beta.3",
+		"nodemon": "^3.1.9"
+	}
+}
