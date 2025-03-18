@@ -1,5 +1,4 @@
 const API_URL = 'http://localhost:3000'
-import { gigachat } from './aiService.js'
 
 export const taskService = {
 	async getTasks(userId) {
@@ -98,11 +97,14 @@ export const taskService = {
 	},
 	async createUser(userId) {
 		try {
-			const balance = await gigachat.getBalance()
 			const newUser = {
 				userId,
 				model: 'GigaChat-2',
 				context: '',
+			}
+			const user = await this.getUser(userId)
+			if (user) {
+				return user
 			}
 
 			const response = await fetch(`${API_URL}/users`, {
@@ -124,8 +126,19 @@ export const taskService = {
 		}
 	},
 	async getUser(userId) {
-		const response = await fetch(`${API_URL}/users/${userId}`)
-		return await response.json()
+		try {
+			const response = await fetch(`${API_URL}/users/${userId}`)
+			if (!response.ok) {
+				if (response.status === 404) {
+					return null // Пользователь не найден
+				}
+				throw new Error(`Ошибка: ${response.status}`)
+			}
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при получении пользователя:', error)
+			return null
+		}
 	},
 	async updateUser(userId, user) {
 		const response = await fetch(`${API_URL}/users/${userId}`, {

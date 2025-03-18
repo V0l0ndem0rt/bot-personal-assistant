@@ -11,38 +11,35 @@ export const gigachat = new GigaChat({
 	scope: 'GIGACHAT_API_PERS', // явно указываем scope для физических лиц
 })
 // Создаем токен при первом использовании
-// if (!gigachat.token) {
-// 	try {
-// 		await gigachat.createToken()
-// 		console.log('Токен GigaChat успешно создан')
-// 	} catch (tokenError) {
-// 		console.error('Ошибка при создании токена GigaChat:', tokenError)
-// 	}
-// }
-
-// const balance = await gigachat.getBalance()
-// console.log(balance)
-
-// const models = await gigachat.allModels()
-// console.log(models)
+if (!gigachat.token) {
+	try {
+		await gigachat.createToken()
+		console.log('Токен GigaChat успешно создан')
+	} catch (tokenError) {
+		console.error('Ошибка при создании токена GigaChat:', tokenError)
+	}
+}
 
 // Экспортируем объект aiService с методом askAI внутри
 export const aiService = {
 	async askAI(userMessage, userId) {
 		try {
-			const tasks = await taskService.getTasks(userId)
-			const context = `Задачи пользователя: ${
-				tasks.map(t => t.description).join(', ') || 'нет активных задач'
+			const user = await taskService.getUser(userId)
+			const context = `Контекст пользователя: ${
+				user.context || 'нет контекста'
 			}`
 
 			const completion = await gigachat.completion({
-				model: 'GigaChat-2',
+				model: user.model,
 				messages: [
 					{
 						role: 'system',
 						content: 'Ты – умный Telegram-ассистент.',
 					},
-					{ role: 'user', content: `${userMessage}` },
+					{
+						role: 'user',
+						content: `${context} \n ${userMessage}`,
+					},
 				],
 				temperature: 0.7,
 				max_tokens: 1500,
