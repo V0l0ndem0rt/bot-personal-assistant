@@ -1,4 +1,5 @@
 import { Markup } from 'telegraf'
+import { message } from 'telegraf/filters'
 import { aiService, gigachat } from '../services/aiService.js'
 import { taskService } from '../services/taskService.js'
 
@@ -60,8 +61,8 @@ export function handleCommands(bot) {
 		await ctx.reply('Введите описание задачи:')
 	})
 
-	// Обработчик текстовых сообщений
-	bot.on('text', async ctx => {
+	// Современный подход с использованием фильтров
+	bot.on(message('text'), async ctx => {
 		// Если включен режим добавления задачи
 		if (ctx.session && ctx.session.addingTask === true) {
 			const task = ctx.message.text
