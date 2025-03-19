@@ -158,4 +158,22 @@ export const taskService = {
 			console.error('Ошибка:', error)
 		}
 	},
+	async resetDialog(userId) {
+		try {
+			const response = await fetch(`${API_URL}/users/${userId}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ context: [] }),
+			})
+			if (!response.ok) {
+				throw new Error(`Ошибка: ${response.status}`)
+			}
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при сбросе диалога:', error)
+			throw error
+		}
+	},
 }

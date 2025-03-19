@@ -3,7 +3,7 @@ import { config } from '../config/env.js'
 import { handleCommands } from './commands.js'
 import { handleMessages } from './handlers.js'
 
-const bot = new Telegraf(config.BOT_TOKEN)
+export const bot = new Telegraf(config.BOT_TOKEN)
 
 handleCommands(bot) // Подключаем команды
 handleMessages(bot) // Подключаем обработчики сообщений
