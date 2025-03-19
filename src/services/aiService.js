@@ -23,9 +23,11 @@ if (!gigachat.token) {
 // Экспортируем объект aiService с методом askAI внутри
 export const aiService = {
 	async askAI(userMessage, userId) {
+		// Получаем контекст пользователя из базы данных
 		const user = await taskService.getUser(userId)
 		const existingContext = user[0].context
 
+		// Создаем массив сообщений для отправки в GigaChat
 		const messages = [
 			{
 				role: 'system',
@@ -38,13 +40,14 @@ export const aiService = {
 			},
 		]
 		try {
+			// Получаем ответ от GigaChat
 			const completion = await gigachat.completion({
 				model: user[0].model || 'GigaChat-2',
 				messages: messages,
 				temperature: 0.7,
 				max_tokens: 1500,
 			})
-
+			// Обновляем контекст пользователя в базе данных
 			await taskService.updateUser(userId, {
 				context: [
 					...existingContext,
