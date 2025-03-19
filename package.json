@@ -13,7 +13,7 @@
 	},
 	"scripts": {
 		"start": "node src/bot/index.js",
-		"dev": "nodemon src/bot/index.js",
+		"dev": "nodemon",
 		"db": "json-server --watch db.json --port 3000"
 	},
 	"license": "MIT",

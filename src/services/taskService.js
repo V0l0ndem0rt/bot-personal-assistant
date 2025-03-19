@@ -4,7 +4,7 @@ export const taskService = {
 	async getTasks(userId) {
 		try {
 			const response = await fetch(
-				`${API_URL}/tasks?userId=${userId}&status=active`
+				`${API_URL}/tasks?id=${userId}&status=active`
 			)
 			if (!response.ok) {
 				throw new Error(`Ошибка: ${response.status}`)
@@ -40,7 +40,7 @@ export const taskService = {
 	async addTask(userId, description) {
 		try {
 			const newTask = {
-				userId,
+				id: userId,
 				description,
 				dueDate: new Date().toISOString(),
 				status: 'active',
@@ -97,16 +97,15 @@ export const taskService = {
 	},
 	async createUser(userId) {
 		try {
-			console.log('createUser', userId)
 			const user = await this.getUser(userId)
-			if (user != null) {
+			if (user.length) {
 				return user
 			}
 
 			const newUser = {
-				userId,
+				id: userId.toString(),
 				model: 'GigaChat-2',
-				context: '',
+				context: [],
 			}
 
 			const response = await fetch(`${API_URL}/users`, {
@@ -129,10 +128,9 @@ export const taskService = {
 	},
 	async getUser(userId) {
 		try {
-			const response = await fetch(`${API_URL}/users?userId=${userId}`)
+			const response = await fetch(`${API_URL}/users?id=${userId}`)
 			if (!response.ok) {
-				console.log('Пользователь не найден')
-				return null
+				throw new Error(`Ошибка: ${response.status}`)
 			}
 			const user = await response.json()
 			return await user
@@ -141,14 +139,23 @@ export const taskService = {
 			return null
 		}
 	},
-	async updateUser(userId, user) {
-		const response = await fetch(`${API_URL}/users/${userId}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(user),
-		})
-		return await response.json()
+	async updateUser(userId, data) {
+		try {
+			const response = await fetch(`${API_URL}/users/${userId}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ ...data }),
+			})
+			if (!response.ok) {
+				throw new Error(
+					`Ошибка при обновлении пользователя: ${response.status}`
+				)
+			}
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка:', error)
+		}
 	},
 }

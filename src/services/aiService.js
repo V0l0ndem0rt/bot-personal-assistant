@@ -23,26 +23,40 @@ if (!gigachat.token) {
 // Экспортируем объект aiService с методом askAI внутри
 export const aiService = {
 	async askAI(userMessage, userId) {
-		try {
-			const user = await taskService.getUser(userId)
-			const context = `Контекст пользователя: ${
-				user.context || 'нет контекста'
-			}`
+		const user = await taskService.getUser(userId)
+		const existingContext = user[0].context
 
+		const messages = [
+			{
+				role: 'system',
+				content: 'Ты – умный Telegram-ассистент.',
+			},
+			...existingContext,
+			{
+				role: 'user',
+				content: `${userMessage}`,
+			},
+		]
+		try {
 			const completion = await gigachat.completion({
-				model: user.model,
-				messages: [
-					{
-						role: 'system',
-						content: 'Ты – умный Telegram-ассистент.',
-					},
-					{
-						role: 'user',
-						content: `${context} \n ${userMessage}`,
-					},
-				],
+				model: user[0].model || 'GigaChat-2',
+				messages: messages,
 				temperature: 0.7,
 				max_tokens: 1500,
+			})
+
+			await taskService.updateUser(userId, {
+				context: [
+					...existingContext,
+					{
+						role: 'user',
+						content: userMessage,
+					},
+					{
+						role: 'assistant',
+						content: completion.choices[0].message.content,
+					},
+				],
 			})
 
 			return completion.choices[0].message.content
