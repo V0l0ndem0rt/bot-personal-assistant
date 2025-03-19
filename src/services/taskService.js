@@ -40,7 +40,7 @@ export const taskService = {
 	async addTask(userId, description) {
 		try {
 			const newTask = {
-				id: userId,
+				id: userId.toString(),
 				description,
 				dueDate: new Date().toISOString(),
 				status: 'active',

@@ -1,8 +1,14 @@
 import { Markup } from 'telegraf'
-import { gigachat } from '../services/aiService.js'
+import { aiService, gigachat } from '../services/aiService.js'
 import { taskService } from '../services/taskService.js'
 
 export function handleCommands(bot) {
+	// Правильная настройка middleware для сессий
+	bot.use((ctx, next) => {
+		ctx.session = ctx.session || {}
+		return next()
+	})
+
 	// Команда для начала работы с ботом
 	bot.command('start', async ctx => {
 		await taskService.createUser(ctx.from.id)
@@ -50,18 +56,27 @@ export function handleCommands(bot) {
 
 	// Обработчик для кнопки "Добавить задачу"
 	bot.hears('➕ Добавить задачу', async ctx => {
-		ctx.session = { addingTask: true }
+		ctx.session.addingTask = true
 		await ctx.reply('Введите описание задачи:')
-		// Обработчик текстовых сообщений
-		bot.on('text', async ctx => {
-			if (ctx.session && ctx.session.addingTask) {
-				const task = ctx.message.text
-				await taskService.addTask(ctx.from.id, task)
-				await ctx.reply('Задача добавлена.')
-				ctx.session.addingTask = false
-			} else {
-				await ctx.reply('не получается добавить задачу')
-			}
-		})
+	})
+
+	// Обработчик текстовых сообщений
+	bot.on('text', async ctx => {
+		// Если включен режим добавления задачи
+		if (ctx.session && ctx.session.addingTask === true) {
+			const task = ctx.message.text
+
+			await taskService.addTask(ctx.from.id, task)
+			await ctx.reply('Задача добавлена.')
+			ctx.session.addingTask = false // Сбрасываем флаг
+		} else {
+			// Передача сообщения в gigachat или другую логику
+
+			const aiResponse = await aiService.askAI(
+				ctx.message.text,
+				ctx.from.id
+			)
+			await ctx.reply(aiResponse, { parse_mode: 'Markdown' })
+		}
 	})
 }

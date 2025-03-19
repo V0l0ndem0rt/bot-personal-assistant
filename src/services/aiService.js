@@ -31,7 +31,8 @@ export const aiService = {
 		const messages = [
 			{
 				role: 'system',
-				content: 'Ты – умный Telegram-ассистент.',
+				content:
+					'Ты – умный Telegram-ассистент. Ответ преобразовывай в Markdown для Telegram.',
 			},
 			...existingContext,
 			{
