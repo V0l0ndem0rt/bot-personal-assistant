@@ -10,18 +10,24 @@ import { taskService } from '../services/taskService.js'
 export function registerTaskCommands(bot) {
 	// Обработчик для кнопки "Задачи"
 	bot.hears('📋 Задачи', async ctx => {
-		const tasks = await taskService.getTasks(ctx.from.id)
-		const taskList = tasks.length
-			? tasks
-					.map(
-						(t, i) =>
-							`${i + 1}. ${t.description} (ID: ${
-								t._id || t.id
-							}) [${t.category || 'общее'}]`
-					)
-					.join('\n')
-			: 'Задач нет.'
-		await ctx.reply(`📋 Ваши задачи:\n${taskList}`)
+		try {
+			const tasks = await taskService.getTasks(ctx.from.id)
+			const taskList = tasks.length
+				? tasks
+						.map((t, i) => {
+							// Определяем отображаемую категорию
+							const displayCategory = t.category || 'общее'
+							return `${i + 1}. ${
+								t.description
+							} [${displayCategory}]`
+						})
+						.join('\n')
+				: 'Задач нет.'
+			await ctx.reply(`📋 Ваши задачи:\n${taskList}`)
+		} catch (error) {
+			console.error('Ошибка при получении списка задач:', error)
+			await ctx.reply('Произошла ошибка при получении списка задач.')
+		}
 	})
 
 	// Обработчик для кнопки "Добавить задачу"
@@ -43,7 +49,7 @@ export function registerTaskCommands(bot) {
 		}
 
 		const taskList = tasks
-			.map((t, i) => `${i + 1}. ${t.description} (ID: ${t._id || t.id})`)
+			.map((t, i) => `${i + 1}. ${t.description}`)
 			.join('\n')
 		await ctx.reply(`Выберите номер задачи для удаления:\n${taskList}`)
 	})
@@ -62,7 +68,7 @@ export function registerTaskCommands(bot) {
 		}
 
 		const taskList = tasks
-			.map((t, i) => `${i + 1}. ${t.description} (ID: ${t._id || t.id})`)
+			.map((t, i) => `${i + 1}. ${t.description}`)
 			.join('\n')
 		await ctx.reply(
 			`Выберите номер задачи для установки срока:\n${taskList}`
@@ -84,9 +90,7 @@ export function registerTaskCommands(bot) {
 		const taskList = tasks
 			.map(
 				(t, i) =>
-					`${i + 1}. ${t.description} (ID: ${t._id || t.id}) [${
-						t.category || 'общее'
-					}]`
+					`${i + 1}. ${t.description} [${t.category || 'общее'}]`
 			)
 			.join('\n')
 		await ctx.reply(
@@ -97,23 +101,28 @@ export function registerTaskCommands(bot) {
 	// Обработчики для просмотра задач по категориям
 	categories.forEach(category => {
 		bot.hears(`🏷️ ${category}`, async ctx => {
-			const tasks = await taskService.getTasksByCategory(
-				ctx.from.id,
-				category
-			)
-			const taskList = tasks.length
-				? tasks
-						.map(
-							(t, i) =>
-								`${i + 1}. ${t.description} (ID: ${
-									t._id || t.id
-								})`
-						)
-						.join('\n')
-				: `В категории "${category}" нет задач.`
-			await ctx.reply(
-				`📋 Задачи из категории "${category}":\n${taskList}`
-			)
+			try {
+				const tasks = await taskService.getTasksByCategory(
+					ctx.from.id,
+					category
+				)
+				const taskList = tasks.length
+					? tasks
+							.map((t, i) => `${i + 1}. ${t.description}`)
+							.join('\n')
+					: `В категории "${category}" нет задач.`
+				await ctx.reply(
+					`📋 Задачи из категории "${category}":\n${taskList}`
+				)
+			} catch (error) {
+				console.error(
+					`Ошибка при получении задач по категории ${category}:`,
+					error
+				)
+				await ctx.reply(
+					`Произошла ошибка при получении задач из категории "${category}".`
+				)
+			}
 		})
 	})
 
@@ -146,20 +155,28 @@ export function registerTaskCommands(bot) {
 					}
 				}
 
-				await taskService.addTask(
-					ctx.from.id,
-					ctx.session.newTask.description,
-					category
-				)
-				await ctx.reply(`Задача добавлена в категорию "${category}".`)
+				try {
+					await taskService.addTask(
+						ctx.from.id,
+						ctx.session.newTask.description,
+						category
+					)
+					await ctx.reply(
+						`Задача добавлена в категорию "${category}".`
+					)
 
-				// Возвращаем основную клавиатуру
-				await ctx.reply('Выберите действие:', mainMenuKeyboard)
+					// Возвращаем основную клавиатуру
+					await ctx.reply('Выберите действие:', mainMenuKeyboard)
 
-				// Сбрасываем флаги и данные
-				ctx.session.addingTask = false
-				ctx.session.newTask = {}
-				return
+					// Сбрасываем флаги и данные
+					ctx.session.addingTask = false
+					ctx.session.newTask = {}
+				} catch (error) {
+					console.error('Ошибка при добавлении задачи:', error)
+					await ctx.reply('Произошла ошибка при добавлении задачи.')
+					ctx.session.addingTask = false
+					ctx.session.newTask = {}
+				}
 			}
 		}
 		// Если включен режим удаления задачи

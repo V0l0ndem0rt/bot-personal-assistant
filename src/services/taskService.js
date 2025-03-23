@@ -67,12 +67,15 @@ export const taskService = {
 
 	async addTask(userId, description, category = 'общее') {
 		try {
+			// Проверяем, что передана категория, иначе используем 'общее'
+			const actualCategory = category || 'общее'
+
 			const newTask = {
 				id: userId.toString(),
 				description,
 				dueDate: new Date().toISOString(),
 				status: 'active',
-				category,
+				category: actualCategory,
 			}
 
 			const response = await fetch(`${API_URL}/tasks`, {
@@ -278,15 +281,31 @@ export const taskService = {
 	},
 	async getTasksByCategory(userId, category) {
 		try {
+			// Получаем все активные задачи пользователя
 			const response = await fetch(
-				`${API_URL}/tasks?id=${userId}&status=active&category=${category}`
+				`${API_URL}/tasks?id=${userId}&status=active`
 			)
 
 			if (!response.ok) {
 				throw new Error(`Ошибка: ${response.status}`)
 			}
 
-			return await response.json()
+			// Получаем все задачи и фильтруем по категории
+			const tasks = await response.json()
+
+			// Фильтруем задачи, у которых категория точно совпадает с запрашиваемой
+			return tasks.filter(task => {
+				// Если запрошена категория "общее", возвращаем задачи с категорией "общее" или без категории
+				if (category === 'общее') {
+					return (
+						!task.category ||
+						task.category === 'общее' ||
+						task.category === ''
+					)
+				}
+				// Иначе проверяем точное совпадение категории
+				return task.category === category
+			})
 		} catch (error) {
 			console.error('Ошибка при получении задач по категории:', error)
 			return []

@@ -7,7 +7,7 @@ export function registerSystemCommands(bot) {
 		try {
 			await taskService.createUser(ctx.from.id)
 			await ctx.reply(
-				'Привет! Я твой ассистент. Выберите действие:',
+				'Привет! Я твой ассистент. Cпроси что-нибудь, я помогу тебе.\nВыберите действие:',
 				mainMenuKeyboard
 			)
 		} catch (error) {
