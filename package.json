@@ -1,6 +1,6 @@
 {
 	"author": "Vladimir Kiselev",
-	"name": "telegram-bot",
+	"name": "Personal Assistant",
 	"version": "1.0.0",
 	"description": "Telegram bot",
 	"main": "src/bot/index.js",
