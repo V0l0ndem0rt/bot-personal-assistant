@@ -1,5 +1,6 @@
 import { message } from 'telegraf/filters'
 import {
+	cancelKeyboard,
 	categories,
 	changeCategoryKeyboard,
 	mainMenuKeyboard,
@@ -34,7 +35,10 @@ export function registerTaskCommands(bot) {
 	bot.hears('➕ Добавить задачу', async ctx => {
 		ctx.session.addingTask = true
 		ctx.session.newTask = {}
-		await ctx.reply('Введите описание задачи:')
+		await ctx.reply(
+			'Введите описание задачи:\n(Или введите "отмена" для возврата в главное меню)',
+			cancelKeyboard
+		)
 	})
 
 	// Обработчик для кнопки "Удалить задачу"
@@ -51,7 +55,10 @@ export function registerTaskCommands(bot) {
 		const taskList = tasks
 			.map((t, i) => `${i + 1}. ${t.description}`)
 			.join('\n')
-		await ctx.reply(`Выберите номер задачи для удаления:\n${taskList}`)
+		await ctx.reply(
+			`Выберите номер задачи для удаления:\n${taskList}\n\nИли введите "отмена" для возврата в главное меню.`,
+			cancelKeyboard
+		)
 	})
 
 	// Обработчик для кнопки "Установить срок"
@@ -71,7 +78,8 @@ export function registerTaskCommands(bot) {
 			.map((t, i) => `${i + 1}. ${t.description}`)
 			.join('\n')
 		await ctx.reply(
-			`Выберите номер задачи для установки срока:\n${taskList}`
+			`Выберите номер задачи для установки срока:\n${taskList}\n\nИли введите "отмена" для возврата в главное меню.`,
+			cancelKeyboard
 		)
 	})
 
@@ -94,7 +102,8 @@ export function registerTaskCommands(bot) {
 			)
 			.join('\n')
 		await ctx.reply(
-			`Выберите номер задачи для изменения категории:\n${taskList}`
+			`Выберите номер задачи для изменения категории:\n${taskList}\n\nИли введите "отмена" для возврата в главное меню.`,
+			cancelKeyboard
 		)
 	})
 
@@ -128,6 +137,24 @@ export function registerTaskCommands(bot) {
 
 	// Обработка ввода пользователя для добавления, удаления, установки срока и категории задачи
 	bot.on(message('text'), async (ctx, next) => {
+		// Общая обработка отмены действия
+		if (ctx.message.text === 'отмена') {
+			// Сбрасываем все флаги сессии
+			if (ctx.session) {
+				ctx.session.addingTask = false
+				ctx.session.newTask = {}
+				ctx.session.deletingTask = false
+				ctx.session.settingDueDate = false
+				ctx.session.dueDate = {}
+				ctx.session.settingCategory = false
+				ctx.session.categoryData = null
+			}
+
+			// Возвращаем основную клавиатуру
+			await ctx.reply('Действие отменено', mainMenuKeyboard)
+			return
+		}
+
 		// Если включен режим добавления задачи
 		if (ctx.session && ctx.session.addingTask === true) {
 			// Если еще не ввели описание задачи
@@ -190,7 +217,7 @@ export function registerTaskCommands(bot) {
 				taskIndex >= tasks.length
 			) {
 				await ctx.reply(
-					'Пожалуйста, выберите корректный номер задачи из списка.'
+					'Пожалуйста, выберите корректный номер задачи из списка.\nИли введите "отмена" для возврата в главное меню.'
 				)
 				return
 			}
@@ -229,7 +256,8 @@ export function registerTaskCommands(bot) {
 				ctx.session.dueDate.taskId =
 					tasks[taskIndex]._id || tasks[taskIndex].id
 				await ctx.reply(
-					'Введите срок выполнения в формате ГГГГ-ММ-ДД (например, 2024-04-01):'
+					'Введите срок выполнения в формате ГГГГ-ММ-ДД (например, 2024-04-01):\n\nИли введите "отмена" для возврата в главное меню.',
+					cancelKeyboard
 				)
 			}
 			// Если задача выбрана и теперь выбираем дату
@@ -239,7 +267,7 @@ export function registerTaskCommands(bot) {
 
 				if (!dateRegex.test(dateStr)) {
 					await ctx.reply(
-						'Пожалуйста, введите дату в формате ГГГГ-ММ-ДД (например, 2024-04-01).'
+						'Пожалуйста, введите дату в формате ГГГГ-ММ-ДД (например, 2024-04-01).\n\nИли введите "отмена" для возврата в главное меню.'
 					)
 					return
 				}
@@ -298,7 +326,7 @@ export function registerTaskCommands(bot) {
 					await ctx.reply(
 						`Пожалуйста, выберите категорию из списка: ${categories.join(
 							', '
-						)}`
+						)}\n\nИли введите "отмена" для возврата в главное меню.`
 					)
 					return
 				}

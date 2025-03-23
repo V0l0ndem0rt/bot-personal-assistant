@@ -21,12 +21,16 @@ export const categoriesKeyboard = Markup.keyboard([
 export const taskCategoryKeyboard = Markup.keyboard([
 	...categories.map(c => [c]),
 	['пропустить'],
+	['отмена'],
 ])
 	.oneTime()
 	.resize()
 
 // Клавиатура для выбора категории при изменении категории задачи
-export const changeCategoryKeyboard = Markup.keyboard(categories.map(c => [c]))
+export const changeCategoryKeyboard = Markup.keyboard([
+	...categories.map(c => [c]),
+	['отмена'],
+])
 	.oneTime()
 	.resize()
 
@@ -36,3 +40,8 @@ export const createModelsKeyboard = models => {
 		.oneTime()
 		.resize()
 }
+
+// Клавиатура с кнопкой отмены для процессов ввода
+export const cancelKeyboard = Markup.keyboard([['отмена']])
+	.oneTime()
+	.resize()
