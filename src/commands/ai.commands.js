@@ -3,6 +3,9 @@ import { createModelsKeyboard, mainMenuKeyboard } from '../bot/keyboards.js'
 import { aiService, gigachat } from '../services/aiService.js'
 import { taskService } from '../services/taskService.js'
 
+// Разрешенные модели
+const ALLOWED_MODELS = ['GigaChat-2', 'GigaChat-2-Pro', 'GigaChat-2-Max']
+
 export function registerAiCommands(bot) {
 	// Обработчик для кнопки "Баланс"
 	bot.hears('💰 Баланс', async ctx => {
@@ -33,13 +36,18 @@ export function registerAiCommands(bot) {
 	// Обработчик для кнопки "Изменить модель AI"
 	bot.hears('⚙️ Изменить модель AI', async ctx => {
 		try {
-			const models = await gigachat.allModels()
+			// Получаем все модели, но фильтруем только разрешенные
+			const allModels = await gigachat.allModels()
+			const models = allModels
+				.filter(model => ALLOWED_MODELS.includes(model.id))
+				.map(model => ({ id: model.id }))
+
 			const user = await taskService.getUser(ctx.from.id)
 			const currentModel = user[0].model
 
 			ctx.session.changingModel = true
 
-			// Создаем клавиатуру с доступными моделями
+			// Создаем клавиатуру только с разрешенными моделями
 			await ctx.reply(
 				`Текущая модель: ${currentModel}\nВыберите модель AI:`,
 				createModelsKeyboard(models)
@@ -57,15 +65,12 @@ export function registerAiCommands(bot) {
 		// Если включен режим изменения модели AI
 		if (ctx.session && ctx.session.changingModel === true) {
 			try {
-				// Проверяем, что выбранная модель существует
-				const models = await gigachat.allModels()
-				const modelExists = models.some(m => m.id === ctx.message.text)
-
-				if (!modelExists) {
+				// Проверяем, что выбранная модель в списке разрешенных
+				if (!ALLOWED_MODELS.includes(ctx.message.text)) {
 					await ctx.reply(
-						`Выбрана неверная модель. Доступные модели: ${models
-							.map(m => m.id)
-							.join(', ')}`
+						`Выбрана неверная модель. Доступные модели: ${ALLOWED_MODELS.join(
+							', '
+						)}`
 					)
 					return
 				}
