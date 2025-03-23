@@ -37,6 +37,34 @@ export const taskService = {
 		}
 	},
 
+	async getUpcomingTasks(hoursThreshold = 24) {
+		try {
+			// Получаем все активные задачи
+			const response = await fetch(`${API_URL}/tasks?status=active`)
+
+			if (!response.ok) {
+				throw new Error(`Ошибка: ${response.status}`)
+			}
+
+			const allTasks = await response.json()
+			const now = new Date()
+			const thresholdMs = hoursThreshold * 60 * 60 * 1000 // часы в миллисекунды
+
+			// Фильтруем задачи, которые истекают в течение указанного времени
+			return allTasks.filter(task => {
+				const dueDate = new Date(task.dueDate)
+				const timeUntilDue = dueDate - now
+
+				// Возвращаем задачи, срок которых истекает в течение указанного времени,
+				// но еще не просрочены
+				return timeUntilDue > 0 && timeUntilDue <= thresholdMs
+			})
+		} catch (error) {
+			console.error(`Ошибка при получении предстоящих задач: ${error}`)
+			return []
+		}
+	},
+
 	async addTask(userId, description) {
 		try {
 			const newTask = {
@@ -173,6 +201,27 @@ export const taskService = {
 			return await response.json()
 		} catch (error) {
 			console.error('Ошибка при сбросе диалога:', error)
+			throw error
+		}
+	},
+	async deleteTask(taskId) {
+		try {
+			const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			})
+
+			if (!response.ok) {
+				throw new Error(
+					`Ошибка при удалении задачи: ${response.status}`
+				)
+			}
+
+			return true
+		} catch (error) {
+			console.error('Ошибка при удалении задачи:', error)
 			throw error
 		}
 	},

@@ -10,6 +10,13 @@ export function handleCommands(bot) {
 		return next()
 	})
 
+	// bot.on(message('voice'), async ctx => {
+	// 	// Получаем файл голосового сообщения
+	// 	const fileId = ctx.message.voice.file_id
+	// 	const fileLink = await ctx.telegram.getFileLink(fileId)
+	// 	await ctx.reply(fileLink)
+	// })
+
 	// Команда для начала работы с ботом
 	bot.command('start', async ctx => {
 		await taskService.createUser(ctx.from.id)
