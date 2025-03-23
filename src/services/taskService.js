@@ -65,13 +65,14 @@ export const taskService = {
 		}
 	},
 
-	async addTask(userId, description) {
+	async addTask(userId, description, category = 'общее') {
 		try {
 			const newTask = {
 				id: userId.toString(),
 				description,
 				dueDate: new Date().toISOString(),
 				status: 'active',
+				category,
 			}
 
 			const response = await fetch(`${API_URL}/tasks`, {
@@ -204,6 +205,28 @@ export const taskService = {
 			throw error
 		}
 	},
+	async setUserModel(userId, model) {
+		try {
+			const response = await fetch(`${API_URL}/users/${userId}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ model }),
+			})
+
+			if (!response.ok) {
+				throw new Error(
+					`Ошибка при изменении модели: ${response.status}`
+				)
+			}
+
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при изменении модели:', error)
+			throw error
+		}
+	},
 	async deleteTask(taskId) {
 		try {
 			const response = await fetch(`${API_URL}/tasks/${taskId}`, {
@@ -222,6 +245,72 @@ export const taskService = {
 			return true
 		} catch (error) {
 			console.error('Ошибка при удалении задачи:', error)
+			throw error
+		}
+	},
+	async setTaskDueDate(taskId, dueDate) {
+		try {
+			// Проверяем, что дата в правильном формате
+			const dueDateObj = new Date(dueDate)
+			if (isNaN(dueDateObj.getTime())) {
+				throw new Error('Некорректная дата')
+			}
+
+			const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ dueDate: dueDateObj.toISOString() }),
+			})
+
+			if (!response.ok) {
+				throw new Error(
+					`Ошибка при обновлении срока задачи: ${response.status}`
+				)
+			}
+
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при установке срока задачи:', error)
+			throw error
+		}
+	},
+	async getTasksByCategory(userId, category) {
+		try {
+			const response = await fetch(
+				`${API_URL}/tasks?id=${userId}&status=active&category=${category}`
+			)
+
+			if (!response.ok) {
+				throw new Error(`Ошибка: ${response.status}`)
+			}
+
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при получении задач по категории:', error)
+			return []
+		}
+	},
+	async setTaskCategory(taskId, category) {
+		try {
+			const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ category }),
+			})
+
+			if (!response.ok) {
+				throw new Error(
+					`Ошибка при установке категории: ${response.status}`
+				)
+			}
+
+			return await response.json()
+		} catch (error) {
+			console.error('Ошибка при установке категории задачи:', error)
 			throw error
 		}
 	},
