@@ -227,6 +227,7 @@ export function registerTaskCommands(bot) {
 			try {
 				await taskService.deleteTask(taskId)
 				await ctx.reply('Задача успешно удалена.')
+				await ctx.reply('', mainMenuKeyboard)
 			} catch (error) {
 				await ctx.reply('Произошла ошибка при удалении задачи.')
 				console.error('Ошибка при удалении задачи:', error)
